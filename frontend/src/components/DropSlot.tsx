@@ -3,7 +3,13 @@
 
 import { useDrop } from 'react-dnd'
 import CharacterCard from '@/components/CharacterCard'
-import type { Personaje } from '@/types'
+
+// Tipo local de personaje
+type Personaje = {
+  nombre: string
+  tier: string
+  imagen_url: string
+}
 
 const ItemTypes = {
   PERSONAJE: 'personaje',
@@ -17,18 +23,21 @@ type Props = {
 }
 
 export default function DropSlot({ index, personaje, onDrop, estaJugando }: Props) {
-  const [{ isOver, canDrop }, drop] = useDrop(() => ({
-    accept: ItemTypes.PERSONAJE,
-    drop: (item: Personaje) => {
-      onDrop(index, item)
-      return { dropped: true }
-    },
-    canDrop: () => estaJugando && personaje === null,
-    collect: (monitor) => ({
-      isOver: monitor.isOver(),
-      canDrop: monitor.canDrop(),
+  const [{ isOver, canDrop }, drop] = useDrop(
+    () => ({
+      accept: ItemTypes.PERSONAJE,
+      drop: (item: Personaje) => {
+        onDrop(index, item)
+        return { dropped: true }
+      },
+      canDrop: () => estaJugando && personaje === null,
+      collect: (monitor) => ({
+        isOver: monitor.isOver(),
+        canDrop: monitor.canDrop(),
+      }),
     }),
-  }), [index, personaje, onDrop, estaJugando])
+    [index, personaje, onDrop, estaJugando]
+  )
 
   const isActive = isOver && canDrop
 
@@ -48,10 +57,3 @@ export default function DropSlot({ index, personaje, onDrop, estaJugando }: Prop
     </div>
   )
 }
-
-// types/index.ts
-export type Personaje = {
-  nombre: string
-  tier: string
-  imagen_url: string
-} 
