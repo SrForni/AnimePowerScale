@@ -126,33 +126,154 @@ export default function GamePage() {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-tr from-purple-900 to-indigo-900 text-white px-4 py-10 space-y-8">
-        <h1 className="text-3xl font-bold">
-          {estadoJuego === 'jugando' ? 'Coloca al personaje' : estadoJuego === 'ganado' ? '¡Ganaste! 🎉' : 'Has perdido 😢'}
-        </h1>
-
-        {estadoJuego === 'jugando' && personajes[actual] && (
-          <DraggableCard personaje={personajes[actual]} />
-        )}
-
-        {cargando && <div className="text-white">Cargando personaje...</div>}
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {casillas.map((p, i) => (
-            <DropSlot
+      <div
+        className={`min-h-screen w-full flex flex-col items-center justify-center px-4 py-10 relative overflow-hidden
+        ${
+          estadoJuego === 'ganado'
+            ? 'bg-gradient-to-br from-green-800 to-emerald-900'
+            : estadoJuego === 'perdido'
+            ? 'bg-gradient-to-br from-red-800 to-rose-900'
+            : 'bg-gradient-to-br from-purple-900 via-indigo-900 to-violet-900'
+        }
+        text-white transition-colors duration-1000`}
+      >
+        {/* Fondo decorativo */}
+        <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
+          <div className="absolute inset-0 opacity-5 bg-[url('/placeholder.svg?height=100&width=100')] bg-repeat"></div>
+  
+          {Array.from({ length: 20 }).map((_, i) => (
+            <div
               key={i}
-              index={i}
-              personaje={p}
-              onDrop={handleDrop}
-              estaJugando={estadoJuego === 'jugando'}
-            />
+              className={`absolute rounded-full 
+                ${estadoJuego === 'ganado' ? 'bg-green-400' : estadoJuego === 'perdido' ? 'bg-red-400' : 'bg-indigo-400'} 
+                opacity-20 animate-float`}
+              style={{
+                width: `${Math.random() * 30 + 10}px`,
+                height: `${Math.random() * 30 + 10}px`,
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDuration: `${Math.random() * 10 + 10}s`,
+                animationDelay: `${Math.random() * 5}s`,
+              }}
+            ></div>
           ))}
+  
+          {estadoJuego === 'ganado' && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              {Array.from({ length: 20 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="absolute w-2 h-8 bg-green-400 opacity-60 animate-firework"
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    top: `${Math.random() * 100}%`,
+                    transform: `rotate(${Math.random() * 360}deg)`,
+                    animationDuration: `${Math.random() * 2 + 1}s`,
+                    animationDelay: `${Math.random() * 2}s`,
+                  }}
+                ></div>
+              ))}
+            </div>
+          )}
         </div>
-
-        {estadoJuego !== 'jugando' && (
-          <Button onClick={() => window.location.reload()}>Volver a jugar</Button>
-        )}
+  
+        {/* Contenido principal */}
+        <div className="relative z-10 flex flex-col items-center space-y-8 w-full max-w-6xl">
+          <h1
+            className={`text-4xl font-extrabold text-center mb-4 transition-all duration-700
+            ${
+              estadoJuego === 'ganado'
+                ? 'text-green-200 scale-125'
+                : estadoJuego === 'perdido'
+                ? 'text-red-200'
+                : 'text-white'
+            }`}
+          >
+            {estadoJuego === 'jugando'
+              ? 'Coloca al personaje en su posición'
+              : estadoJuego === 'ganado'
+              ? '¡Victoria! 🎉'
+              : 'Derrota 😢'}
+          </h1>
+  
+          {estadoJuego === 'jugando' && personajes[actual] && (
+            <div className="mb-6 transform hover:scale-105 transition-transform duration-300">
+              <DraggableCard personaje={personajes[actual]} />
+            </div>
+          )}
+  
+          {cargando && (
+            <div className="flex items-center justify-center space-x-2 text-white py-4">
+              <div className="w-3 h-3 bg-white rounded-full animate-bounce [animation-delay:0s]"></div>
+              <div className="w-3 h-3 bg-white rounded-full animate-bounce [animation-delay:0.2s]"></div>
+              <div className="w-3 h-3 bg-white rounded-full animate-bounce [animation-delay:0.4s]"></div>
+              <span className="ml-2 text-lg font-medium">Cargando personaje...</span>
+            </div>
+          )}
+  
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 w-full">
+            {casillas.map((p, i) => (
+              <div key={i} className="transform transition-all duration-300 hover:scale-102">
+                <DropSlot index={i} personaje={p} onDrop={handleDrop} estaJugando={estadoJuego === 'jugando'} />
+              </div>
+            ))}
+          </div>
+  
+          {estadoJuego !== 'jugando' && (
+            <div className="flex flex-col items-center gap-6 mt-8 animate-fadeIn">
+              <p
+                className={`text-xl font-semibold text-center max-w-2xl
+                ${estadoJuego === 'ganado' ? 'text-green-200' : 'text-red-200'}`}
+              >
+                {estadoJuego === 'ganado'
+                  ? '¡Has colocado todos los personajes correctamente! Eres un verdadero fan de anime.'
+                  : 'El orden no es correcto. ¡No te rindas, inténtalo de nuevo!'}
+              </p>
+  
+              <div className="flex flex-wrap justify-center gap-4 mt-2">
+                <button
+                  onClick={() => window.location.reload()}
+                  className="px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl font-bold text-white shadow-lg hover:shadow-purple-500/30 transition-all duration-300 hover:scale-105"
+                >
+                  Volver a jugar
+                </button>
+  
+                {cantidad > 5 && (
+                  <button
+                    onClick={() => {
+                      const params = new URLSearchParams(window.location.search)
+                      params.set('casillas', String(cantidad - 2))
+                      window.location.href = `/game?${params.toString()}`
+                    }}
+                    className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl font-bold text-white shadow-lg hover:shadow-blue-500/30 transition-all duration-300 hover:scale-105"
+                  >
+                    Nivel más fácil
+                  </button>
+                )}
+  
+                {cantidad < 10 && (
+                  <button
+                    onClick={() => {
+                      const params = new URLSearchParams(window.location.search)
+                      params.set('casillas', String(cantidad + 2))
+                      window.location.href = `/game?${params.toString()}`
+                    }}
+                    className="px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 rounded-xl font-bold text-white shadow-lg hover:shadow-pink-500/30 transition-all duration-300 hover:scale-105"
+                  >
+                    Nivel más difícil
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+  
+        <div className="absolute bottom-4 left-4 text-white/70 text-sm">
+          Dificultad: {cantidad} casillas
+        </div>
       </div>
     </DndProvider>
   )
+  
+  
 }
