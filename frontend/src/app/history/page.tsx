@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react"
 import { Calendar, Clock, Trophy, XCircle, Loader2, History, Gamepad2, ArrowUpDown } from "lucide-react"
+import { useSession } from 'next-auth/react'
+import Link from 'next/link'
+
 
 interface Partida {
   id: number
@@ -59,25 +62,29 @@ export default function HistoryPage() {
   const [partidas, setPartidas] = useState<Partida[]>([])
   const [loading, setLoading] = useState(true)
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
+  const { data: session } = useSession()
+
 
   useEffect(() => {
     async function fetchPartidas() {
       try {
-        const res = await fetch("http://localhost:3000/api/partidas")
+        const res = await fetch('/api/partidas')
         const json = await res.json()
-        console.log("🧪 Respuesta JSON:", json)
-
         const data = json.data || []
-        sortPartidas(data, sortOrder)
+
+        const partidasUsuario = data.filter(p => p.usuario_id === session?.user?.id)
+        setPartidas(partidasUsuario)
+
       } catch (err) {
-        console.error("Error al cargar las partidas:", err)
+        console.error('Error al cargar las partidas:', err)
       } finally {
         setLoading(false)
       }
     }
 
-    fetchPartidas()
-  }, [sortOrder])
+    if (session?.user?.id) fetchPartidas()
+  }, [session])
+
 
   const sortPartidas = (data: Partida[], order: "asc" | "desc") => {
     const ordenadas = [...data].sort((a: Partida, b: Partida) => {
@@ -130,12 +137,12 @@ export default function HistoryPage() {
             <Gamepad2 className="h-16 w-16 mx-auto text-gray-600 mb-4" />
             <h2 className="text-2xl font-bold text-gray-400 mb-2">No hay partidas registradas</h2>
             <p className="text-gray-500 mb-6">¡Juega tu primera partida para comenzar tu historial!</p>
-            <link
+            <Link
               href="/"
               className="inline-block px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-medium transition-colors"
             >
-              Jugar ahora
-            </link>
+              Ir al juego
+            </Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -170,11 +177,10 @@ export default function HistoryPage() {
                     </div>
 
                     <div
-                      className={`flex items-center justify-center gap-3 py-3 px-4 rounded-lg ${
-                        p.puntuacion === 1
+                      className={`flex items-center justify-center gap-3 py-3 px-4 rounded-lg ${p.puntuacion === 1
                           ? "bg-green-900/20 text-green-400 border border-green-800/50"
                           : "bg-red-900/20 text-red-400 border border-red-800/50"
-                      }`}
+                        }`}
                     >
                       {p.puntuacion === 1 ? (
                         <>
