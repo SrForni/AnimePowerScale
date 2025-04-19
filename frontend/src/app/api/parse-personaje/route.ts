@@ -8,8 +8,7 @@ import * as cheerio from 'cheerio'
 // Lista de términos prohibidos
 const excludedTerms = [
   'Verse', 'Arc', 'Saga', 'Movie', 'Techniques', 'Abilities',
-  'Forms', 'Transformations', 'Statistics', 'Equipment', 'Gallery', 'Netflix', 'Category:'
-]
+  'Forms', 'Transformations', 'Statistics', 'Equipment', 'Gallery', 'Netflix', 'Category:', 'Ultimate']
 
 // Utilidad para limpiar y comparar nombres
 function normalizeText(text: string) {

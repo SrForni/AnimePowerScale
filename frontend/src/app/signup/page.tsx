@@ -45,7 +45,7 @@ export default function SignupPage() {
       }
   
       // ✅ Registro exitoso, redirigir al login
-      alert('Registro exitoso, redirigiendo al login');
+      alert('Registro exitoso');
       await signIn('credentials', {
         email,
         password,

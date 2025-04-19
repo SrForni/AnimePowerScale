@@ -1,38 +1,28 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { rankings } from '@/lib/db-config'
+import { partidas, modos, user } from '@/lib/db-config'
+import { eq } from 'drizzle-orm'
 
-
-// GET: Obtener todos los rankings
 export async function GET() {
   try {
-    const allRankings = await db.select().from(rankings)
-    return NextResponse.json({ data: allRankings })
+    const allPartidas = await db
+      .select({
+        id: partidas.id,
+        usuario_id: partidas.usuario_id,
+        nombre_usuario: user.nombre_usuario,
+        nombre_anime: modos.nombre_anime,
+        numero_casillas: modos.numero_casillas,
+        fecha: partidas.fecha,
+        puntuacion: partidas.puntuacion
+      })
+      .from(partidas)
+      .leftJoin(modos, eq(partidas.modo_id, modos.id))
+      .leftJoin(user, eq(partidas.usuario_id, user.id)) // 👈 esto es lo nuevo
+
+    return NextResponse.json({ data: allPartidas })
   } catch (error) {
-    console.error('Error al obtener rankings:', error)
-    return NextResponse.json({ error: 'Error al obtener rankings' }, { status: 500 })
+    console.error('Error al obtener partidas:', error)
+    return NextResponse.json({ error: 'Error al obtener partidas' }, { status: 500 })
   }
 }
 
-// POST: Crear un nuevo ranking
-export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json()
-    const { usuario_id, modo_id, puntuacion } = body
-
-    if (!usuario_id || !modo_id || puntuacion === undefined) {
-      return NextResponse.json({ error: 'Faltan campos: usuario_id, modo_id, puntuacion' }, { status: 400 })
-    }
-
-    const newRanking = await db.insert(rankings).values({
-      usuario_id,
-      modo_id,
-      puntuacion
-    }).returning()
-
-    return NextResponse.json({ message: 'Ranking creado', data: newRanking })
-  } catch (error) {
-    console.error('Error al crear ranking:', error)
-    return NextResponse.json({ error: 'Error al crear ranking' }, { status: 500 })
-  }
-}

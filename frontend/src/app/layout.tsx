@@ -1,6 +1,7 @@
 import './globals.css';
 import { ReactNode } from 'react';
 import ClientLayout from '@/components/ClientLayout';
+import LayoutWrapper from '@/components/LayoutWrapper';
 
 export const metadata = {
   title: 'Anime Power Scale',
@@ -10,11 +11,9 @@ export const metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="es">
-      <body>
+      <body className="w-full h-full overflow-hidden bg-gray-950">
         <ClientLayout>
-          <main className="min-h-screen flex items-center justify-center">
-            {children}
-          </main>
+          <LayoutWrapper>{children}</LayoutWrapper>
         </ClientLayout>
       </body>
     </html>

@@ -4,9 +4,10 @@ import { useEffect, useState, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
-import { Button } from '@/components/ui/button'
 import DraggableCard from '@/components/DraggableCard'
 import DropSlot from '@/components/DropSlot'
+import { useSession } from 'next-auth/react'
+
 
 // Tipos
 interface Personaje {
@@ -29,6 +30,8 @@ export default function GamePage() {
   const [estadoJuego, setEstadoJuego] = useState<'jugando' | 'perdido' | 'ganado'>('jugando')
   const [cargando, setCargando] = useState(false)
   const [fallbackIndex, setFallbackIndex] = useState(0)
+  const { data: session } = useSession()
+
 
   const tierRanking: Record<string, number> = {
     '1-A': 1, '1-B': 2, '1-C': 3,
@@ -45,11 +48,11 @@ export default function GamePage() {
   const getTierValue = (tier: string): number => {
     const matches = tier.match(/(\d-[A-C])/g)
     if (!matches) return Infinity
-  
+
     const valores = matches
       .map(t => tierRanking[t])
       .filter(v => v !== undefined)
-  
+
     return valores.length > 0 ? Math.min(...valores) : Infinity
   }
 
@@ -117,30 +120,67 @@ export default function GamePage() {
 
     if (!ordenCorrecto) {
       setEstadoJuego('perdido')
+      handlePostPartida(0)
     } else if (actual + 1 >= cantidad) {
       setEstadoJuego('ganado')
+
+
+
+      handlePostPartida(1)
     } else {
       setActual((prev) => prev + 1)
+    }
+  }
+
+  const getModoId = async (anime: string, casillas: number): Promise<number | null> => {
+    try {
+      const res = await fetch('/api/modos')
+      const data = await res.json()
+      const modo = data.data.find((m: any) => m.nombre_anime === anime && m.numero_casillas === casillas)
+      return modo?.id || null
+    } catch (err) {
+      console.error('⛔ Error al obtener modos:', err)
+      return null
+    }
+  }
+
+  const handlePostPartida = async (puntuacion: number) => {
+    if (!session?.user?.id) {
+      console.warn('No hay usuario autenticado.')
+      return
+    }
+  
+    try {
+      await fetch('/api/partidas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          usuario_id: session.user.id,
+          modo_id: await getModoId(anime, cantidad),
+          puntuacion,
+        }),
+      })
+      console.log('✅ Partida registrada')
+    } catch (error) {
+      console.error('⛔ Error al registrar la partida:', error)
     }
   }
 
   return (
     <DndProvider backend={HTML5Backend}>
       <div
-        className={`min-h-screen w-full flex flex-col items-center justify-center px-4 py-10 relative overflow-hidden
-        ${
-          estadoJuego === 'ganado'
+        className={`h-full w-full flex flex-col items-center justify-center px-4 py-10 relative overflow-hidden
+    ${estadoJuego === 'ganado'
             ? 'bg-gradient-to-br from-green-800 to-emerald-900'
             : estadoJuego === 'perdido'
-            ? 'bg-gradient-to-br from-red-800 to-rose-900'
-            : 'bg-gradient-to-br from-purple-900 via-indigo-900 to-violet-900'
-        }
-        text-white transition-colors duration-1000`}
+              ? 'bg-gradient-to-br from-red-800 to-rose-900'
+              : 'bg-gradient-to-br from-purple-900 via-indigo-900 to-violet-900'}
+    text-white transition-colors duration-1000`}
       >
         {/* Fondo decorativo */}
         <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
           <div className="absolute inset-0 opacity-5 bg-[url('/placeholder.svg?height=100&width=100')] bg-repeat"></div>
-  
+
           {Array.from({ length: 20 }).map((_, i) => (
             <div
               key={i}
@@ -157,7 +197,7 @@ export default function GamePage() {
               }}
             ></div>
           ))}
-  
+
           {estadoJuego === 'ganado' && (
             <div className="absolute inset-0 flex items-center justify-center">
               {Array.from({ length: 20 }).map((_, i) => (
@@ -176,32 +216,31 @@ export default function GamePage() {
             </div>
           )}
         </div>
-  
+
         {/* Contenido principal */}
         <div className="relative z-10 flex flex-col items-center space-y-8 w-full max-w-6xl">
           <h1
             className={`text-4xl font-extrabold text-center mb-4 transition-all duration-700
-            ${
-              estadoJuego === 'ganado'
+            ${estadoJuego === 'ganado'
                 ? 'text-green-200 scale-125'
                 : estadoJuego === 'perdido'
-                ? 'text-red-200'
-                : 'text-white'
-            }`}
+                  ? 'text-red-200'
+                  : 'text-white'
+              }`}
           >
             {estadoJuego === 'jugando'
               ? 'Coloca al personaje en su posición'
               : estadoJuego === 'ganado'
-              ? '¡Victoria! 🎉'
-              : 'Derrota 😢'}
+                ? '¡Victoria! 🎉'
+                : 'Derrota 😢'}
           </h1>
-  
+
           {estadoJuego === 'jugando' && personajes[actual] && (
             <div className="mb-6 transform hover:scale-105 transition-transform duration-300">
               <DraggableCard personaje={personajes[actual]} />
             </div>
           )}
-  
+
           {cargando && (
             <div className="flex items-center justify-center space-x-2 text-white py-4">
               <div className="w-3 h-3 bg-white rounded-full animate-bounce [animation-delay:0s]"></div>
@@ -210,7 +249,7 @@ export default function GamePage() {
               <span className="ml-2 text-lg font-medium">Cargando personaje...</span>
             </div>
           )}
-  
+
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 w-full">
             {casillas.map((p, i) => (
               <div key={i} className="transform transition-all duration-300 hover:scale-102">
@@ -218,7 +257,7 @@ export default function GamePage() {
               </div>
             ))}
           </div>
-  
+
           {estadoJuego !== 'jugando' && (
             <div className="flex flex-col items-center gap-6 mt-8 animate-fadeIn">
               <p
@@ -229,7 +268,7 @@ export default function GamePage() {
                   ? '¡Has colocado todos los personajes correctamente! Eres un verdadero fan de anime.'
                   : 'El orden no es correcto. ¡No te rindas, inténtalo de nuevo!'}
               </p>
-  
+
               <div className="flex flex-wrap justify-center gap-4 mt-2">
                 <button
                   onClick={() => window.location.reload()}
@@ -237,7 +276,7 @@ export default function GamePage() {
                 >
                   Volver a jugar
                 </button>
-  
+
                 {cantidad > 5 && (
                   <button
                     onClick={() => {
@@ -250,7 +289,7 @@ export default function GamePage() {
                     Nivel más fácil
                   </button>
                 )}
-  
+
                 {cantidad < 10 && (
                   <button
                     onClick={() => {
@@ -267,13 +306,13 @@ export default function GamePage() {
             </div>
           )}
         </div>
-  
+
         <div className="absolute bottom-4 left-4 text-white/70 text-sm">
           Dificultad: {cantidad} casillas
         </div>
       </div>
     </DndProvider>
   )
-  
-  
+
+
 }
