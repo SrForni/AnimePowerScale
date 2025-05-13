@@ -8,7 +8,8 @@ import {
   History,
   Settings,
   Gamepad2,
-  CircleHelp
+  CircleHelp,
+  Newspaper
 } from 'lucide-react'
 
 const navItems = [
@@ -16,6 +17,7 @@ const navItems = [
   { name: 'Rankings', href: '/rankings', icon: <Trophy className="w-5 h-5" /> },
   { name: 'Historial', href: '/history', icon: <History className="w-5 h-5" /> },
   { name: 'Estadísticas', href: '/stats', icon: <BarChart2 className="w-5 h-5" /> },
+  { name: 'Noticias', href: '/news', icon: <Newspaper className="w-5 h-5" /> },
   { name: 'Ajustes', href: '/settings', icon: <Settings className="w-5 h-5" /> },
   { name: 'Ayuda', href: '/help', icon: <CircleHelp className="w-5 h-5" /> },
 ]

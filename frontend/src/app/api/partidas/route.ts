@@ -29,6 +29,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
+    console.log('🛠️ POST /api/partidas - Body recibido:', body) // 👈 AÑADE ESTO
     const { usuario_id, modo_id, puntuacion } = body
 
     if (!usuario_id || !modo_id || puntuacion === undefined) {

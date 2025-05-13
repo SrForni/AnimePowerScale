@@ -1,12 +1,13 @@
-'use client'
+"use client"
 
-import { useEffect, useState, useCallback } from 'react'
-import { useSearchParams } from 'next/navigation'
-import { DndProvider } from 'react-dnd'
-import { HTML5Backend } from 'react-dnd-html5-backend'
-import DraggableCard from '@/components/DraggableCard'
-import DropSlot from '@/components/DropSlot'
-import { useSession } from 'next-auth/react'
+import { useEffect, useState, useCallback } from "react"
+import { useSearchParams } from "next/navigation"
+import { DndProvider } from "react-dnd"
+import { HTML5Backend } from "react-dnd-html5-backend"
+import DraggableCard from "@/components/DraggableCard"
+import DropSlot from "@/components/DropSlot"
+import { useSession } from "next-auth/react"
+
 
 
 // Tipos
@@ -14,46 +15,63 @@ interface Personaje {
   nombre: string
   tier: string
   imagen_url: string
+  url_wiki?: string
 }
 
 type Casilla = Personaje | null
 
 export default function GamePage() {
   const searchParams = useSearchParams()
-  const anime = searchParams.get('anime') || ''
-  const cantidad = parseInt(searchParams.get('casillas') || '5')
+  const anime = searchParams.get("anime") || ""
+  const cantidad = Number.parseInt(searchParams.get("casillas") || "5")
 
   const [nombres, setNombres] = useState<string[]>([])
   const [personajes, setPersonajes] = useState<Personaje[]>([])
   const [casillas, setCasillas] = useState<Casilla[]>(Array(cantidad).fill(null))
   const [actual, setActual] = useState(0)
-  const [estadoJuego, setEstadoJuego] = useState<'jugando' | 'perdido' | 'ganado'>('jugando')
+  const [estadoJuego, setEstadoJuego] = useState<"jugando" | "perdido" | "ganado">("jugando")
   const [cargando, setCargando] = useState(false)
   const [fallbackIndex, setFallbackIndex] = useState(0)
   const { data: session } = useSession()
-
+  const escalaCasillas = cantidad > 8 ? "scale-90" : cantidad > 5 ? "scale-95" : "scale-100"
 
   const tierRanking: Record<string, number> = {
-    '1-A': 1, '1-B': 2, '1-C': 3,
-    '2-A': 4, '2-B': 5, '2-C': 6,
-    '3-A': 7, '3-B': 8, '3-C': 9,
-    '4-A': 10, '4-B': 11, '4-C': 12,
-    '5-A': 13, '5-B': 14, '5-C': 15,
-    '6-A': 16, '6-B': 17, '6-C': 18,
-    '7-A': 19, '7-B': 20, '7-C': 21,
-    '8-A': 22, '8-B': 23, '8-C': 24,
-    '9-A': 25, '9-B': 26, '9-C': 27,
+    "1-A": 1,
+    "1-B": 2,
+    "1-C": 3,
+    "2-A": 4,
+    "2-B": 5,
+    "2-C": 6,
+    "3-A": 7,
+    "3-B": 8,
+    "3-C": 9,
+    "4-A": 10,
+    "4-B": 11,
+    "4-C": 12,
+    "5-A": 13,
+    "5-B": 14,
+    "5-C": 15,
+    "6-A": 16,
+    "6-B": 17,
+    "6-C": 18,
+    "7-A": 19,
+    "7-B": 20,
+    "7-C": 21,
+    "8-A": 22,
+    "8-B": 23,
+    "8-C": 24,
+    "9-A": 25,
+    "9-B": 26,
+    "9-C": 27,
   }
 
   const getTierValue = (tier: string): number => {
     const matches = tier.match(/(\d-[A-C])/g)
-    if (!matches) return Infinity
+    if (!matches) return Number.POSITIVE_INFINITY
 
-    const valores = matches
-      .map(t => tierRanking[t])
-      .filter(v => v !== undefined)
+    const valores = matches.map((t) => tierRanking[t]).filter((v) => v !== undefined)
 
-    return valores.length > 0 ? Math.min(...valores) : Infinity
+    return valores.length > 0 ? Math.min(...valores) : Number.POSITIVE_INFINITY
   }
 
   const obtenerNombres = useCallback(async () => {
@@ -64,7 +82,7 @@ export default function GamePage() {
       const data = await res.json()
       setNombres(data)
     } catch (error) {
-      console.error('Error al obtener nombres:', error)
+      console.error("Error al obtener nombres:", error)
     } finally {
       setCargando(false)
     }
@@ -79,14 +97,14 @@ export default function GamePage() {
         const nombre = nombres[index]
         const res = await fetch(`/api/parse-personaje?nombre=${encodeURIComponent(nombre)}`)
 
-        if (!res.ok) throw new Error('Personaje inválido')
+        if (!res.ok) throw new Error("Personaje inválido")
 
         const detalle = await res.json()
         setPersonajes((prev) => [...prev, detalle])
         setFallbackIndex(index + 1)
         break
       } catch (error) {
-        console.warn('❌ Fallo personaje, probando siguiente...', nombres[index])
+        console.warn("❌ Fallo personaje, probando siguiente...", nombres[index])
         index++
       }
     }
@@ -99,7 +117,7 @@ export default function GamePage() {
   }, [obtenerNombres])
 
   useEffect(() => {
-    if (estadoJuego === 'jugando' && personajes.length === actual && nombres.length > fallbackIndex) {
+    if (estadoJuego === "jugando" && personajes.length === actual && nombres.length > fallbackIndex) {
       cargarSiguientePersonaje()
     }
   }, [actual, personajes, nombres, estadoJuego, cargarSiguientePersonaje, fallbackIndex])
@@ -112,19 +130,15 @@ export default function GamePage() {
     nuevas[index] = personaje
     setCasillas(nuevas)
 
-    const tiers = nuevas
-      .filter(Boolean)
-      .map((p) => getTierValue((p as Personaje).tier))
+    const tiers = nuevas.filter(Boolean).map((p) => getTierValue((p as Personaje).tier))
 
     const ordenCorrecto = tiers.every((t, i, arr) => i === 0 || arr[i - 1] <= t)
 
     if (!ordenCorrecto) {
-      setEstadoJuego('perdido')
+      setEstadoJuego("perdido")
       handlePostPartida(0)
     } else if (actual + 1 >= cantidad) {
-      setEstadoJuego('ganado')
-
-
+      setEstadoJuego("ganado")
 
       handlePostPartida(1)
     } else {
@@ -134,48 +148,80 @@ export default function GamePage() {
 
   const getModoId = async (anime: string, casillas: number): Promise<number | null> => {
     try {
-      const res = await fetch('/api/modos')
+      const res = await fetch("/api/modos")
       const data = await res.json()
-      const modo = data.data.find((m: any) => m.nombre_anime === anime && m.numero_casillas === casillas)
-      return modo?.id || null
+  
+      let modo = data.data.find(
+        (m: any) => m.nombre_anime === anime && m.numero_casillas === casillas
+      )
+  
+      // Si no existe, crearlo
+      if (!modo) {
+        const createRes = await fetch("/api/modos", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nombre_anime: anime, numero_casillas: casillas }),
+        })
+  
+        if (createRes.ok) {
+          const newModo = await createRes.json()
+          return newModo.data.id
+        } else {
+          console.error("⛔ No se pudo crear el modo:", await createRes.text())
+          return null
+        }
+      }
+  
+      return modo.id
     } catch (err) {
-      console.error('⛔ Error al obtener modos:', err)
+      console.error("⛔ Error al obtener o crear modo:", err)
       return null
     }
   }
+  
 
   const handlePostPartida = async (puntuacion: number) => {
     if (!session?.user?.id) {
-      console.warn('No hay usuario autenticado.')
+      console.warn("No hay usuario autenticado.")
+      return
+    }
+  
+    const modo_id = await getModoId(anime, cantidad)
+  
+    if (!modo_id) {
+      console.warn("⛔ No se encontró un modo válido para", anime, cantidad)
       return
     }
   
     try {
-      await fetch('/api/partidas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      await fetch("/api/partidas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           usuario_id: session.user.id,
-          modo_id: await getModoId(anime, cantidad),
+          modo_id,
           puntuacion,
         }),
       })
-      console.log('✅ Partida registrada')
+      console.log("✅ Partida registrada")
     } catch (error) {
-      console.error('⛔ Error al registrar la partida:', error)
+      console.error("⛔ Error al registrar la partida:", error)
     }
   }
+  
 
   return (
     <DndProvider backend={HTML5Backend}>
       <div
-        className={`h-full w-full flex flex-col items-center justify-center px-4 py-10 relative overflow-hidden
-    ${estadoJuego === 'ganado'
-            ? 'bg-gradient-to-br from-green-800 to-emerald-900'
-            : estadoJuego === 'perdido'
-              ? 'bg-gradient-to-br from-red-800 to-rose-900'
-              : 'bg-gradient-to-br from-purple-900 via-indigo-900 to-violet-900'}
-    text-white transition-colors duration-1000`}
+        className={`h-full w-full flex flex-col items-center justify-center px-4 py-10 relative overflow-y-auto overflow-x-hidden
+${
+  estadoJuego === "ganado"
+    ? "bg-gradient-to-br from-green-800 to-emerald-900"
+    : estadoJuego === "perdido"
+      ? "bg-gradient-to-br from-red-800 to-rose-900"
+      : "bg-gradient-to-br from-purple-900 via-indigo-900 to-violet-900"
+}
+text-white transition-colors duration-1000`}
       >
         {/* Fondo decorativo */}
         <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
@@ -185,7 +231,7 @@ export default function GamePage() {
             <div
               key={i}
               className={`absolute rounded-full 
-                ${estadoJuego === 'ganado' ? 'bg-green-400' : estadoJuego === 'perdido' ? 'bg-red-400' : 'bg-indigo-400'} 
+                ${estadoJuego === "ganado" ? "bg-green-400" : estadoJuego === "perdido" ? "bg-red-400" : "bg-indigo-400"} 
                 opacity-20 animate-float`}
               style={{
                 width: `${Math.random() * 30 + 10}px`,
@@ -198,7 +244,7 @@ export default function GamePage() {
             ></div>
           ))}
 
-          {estadoJuego === 'ganado' && (
+          {estadoJuego === "ganado" && (
             <div className="absolute inset-0 flex items-center justify-center">
               {Array.from({ length: 20 }).map((_, i) => (
                 <div
@@ -218,26 +264,30 @@ export default function GamePage() {
         </div>
 
         {/* Contenido principal */}
-        <div className="relative z-10 flex flex-col items-center space-y-8 w-full max-w-6xl">
+        <div className="relative z-10 flex flex-col items-center space-y-8 w-full max-w-full sm:max-w-6xl max-h-[100vh] overflow-y-auto overflow-x-hidden px-2">
           <h1
             className={`text-4xl font-extrabold text-center mb-4 transition-all duration-700
-            ${estadoJuego === 'ganado'
-                ? 'text-green-200 scale-125'
-                : estadoJuego === 'perdido'
-                  ? 'text-red-200'
-                  : 'text-white'
-              }`}
+            ${
+              estadoJuego === "ganado"
+                ? "text-green-200 scale-125"
+                : estadoJuego === "perdido"
+                  ? "text-red-200"
+                  : "text-white"
+            }`}
           >
-            {estadoJuego === 'jugando'
-              ? 'Coloca al personaje en su posición'
-              : estadoJuego === 'ganado'
-                ? '¡Victoria! 🎉'
-                : 'Derrota 😢'}
+            {estadoJuego === "jugando"
+              ? "Coloca al personaje en su posición"
+              : estadoJuego === "ganado"
+                ? "¡Victoria! 🎉"
+                : "Derrota 😢"}
           </h1>
 
-          {estadoJuego === 'jugando' && personajes[actual] && (
-            <div className="mb-6 transform hover:scale-105 transition-transform duration-300">
-              <DraggableCard personaje={personajes[actual]} />
+          {estadoJuego === "jugando" && personajes[actual] && (
+            <div className="mb-6 relative flex justify-center items-center">
+              {/* Tarjeta draggable */}
+              <div className="w-60 h-60">
+                <DraggableCard personaje={personajes[actual]} />
+              </div>
             </div>
           )}
 
@@ -250,23 +300,25 @@ export default function GamePage() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 w-full">
+          <div
+            className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4 md:gap-6 w-full transform transition-transform duration-300 ${escalaCasillas}`}
+          >
             {casillas.map((p, i) => (
               <div key={i} className="transform transition-all duration-300 hover:scale-102">
-                <DropSlot index={i} personaje={p} onDrop={handleDrop} estaJugando={estadoJuego === 'jugando'} />
+                <DropSlot index={i} personaje={p} onDrop={handleDrop} estaJugando={estadoJuego === "jugando"} />
               </div>
             ))}
           </div>
 
-          {estadoJuego !== 'jugando' && (
+          {estadoJuego !== "jugando" && (
             <div className="flex flex-col items-center gap-6 mt-8 animate-fadeIn">
               <p
                 className={`text-xl font-semibold text-center max-w-2xl
-                ${estadoJuego === 'ganado' ? 'text-green-200' : 'text-red-200'}`}
+                ${estadoJuego === "ganado" ? "text-green-200" : "text-red-200"}`}
               >
-                {estadoJuego === 'ganado'
-                  ? '¡Has colocado todos los personajes correctamente! Eres un verdadero fan de anime.'
-                  : 'El orden no es correcto. ¡No te rindas, inténtalo de nuevo!'}
+                {estadoJuego === "ganado"
+                  ? "¡Has colocado todos los personajes correctamente! Eres un verdadero fan de anime."
+                  : "El orden no es correcto. ¡No te rindas, inténtalo de nuevo!"}
               </p>
 
               <div className="flex flex-wrap justify-center gap-4 mt-2">
@@ -281,7 +333,7 @@ export default function GamePage() {
                   <button
                     onClick={() => {
                       const params = new URLSearchParams(window.location.search)
-                      params.set('casillas', String(cantidad - 2))
+                      params.set("casillas", String(cantidad - 2))
                       window.location.href = `/game?${params.toString()}`
                     }}
                     className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl font-bold text-white shadow-lg hover:shadow-blue-500/30 transition-all duration-300 hover:scale-105"
@@ -294,7 +346,7 @@ export default function GamePage() {
                   <button
                     onClick={() => {
                       const params = new URLSearchParams(window.location.search)
-                      params.set('casillas', String(cantidad + 2))
+                      params.set("casillas", String(cantidad + 2))
                       window.location.href = `/game?${params.toString()}`
                     }}
                     className="px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 rounded-xl font-bold text-white shadow-lg hover:shadow-pink-500/30 transition-all duration-300 hover:scale-105"
@@ -307,12 +359,8 @@ export default function GamePage() {
           )}
         </div>
 
-        <div className="absolute bottom-4 left-4 text-white/70 text-sm">
-          Dificultad: {cantidad} casillas
-        </div>
+        <div className="absolute bottom-4 left-4 text-white/70 text-sm">Dificultad: {cantidad} casillas</div>
       </div>
     </DndProvider>
   )
-
-
 }

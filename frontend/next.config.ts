@@ -1,12 +1,40 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   images: {
-    domains: [
-      "upload.wikimedia.org",
-      "static.wikia.nocookie.net",
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'static.wikia.nocookie.net',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'naruto.fandom.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.myanimelist.net',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.imgur.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 's4.anilist.co',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'upload.wikimedia.org',
+        pathname: '/**',
+      }
     ],
   },
-};
+}
 
-export default nextConfig;
+export default nextConfig

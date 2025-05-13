@@ -26,7 +26,7 @@ services:
     volumes:
     - .:/app:delegated
     - /app/node_modules
-    command: sh -c "npm install --include=dev && npm run dev"
+    command: sh -c "npm install npx drizzle-kit migrate --include=dev && npm run dev"
 
 volumes:
   postgres_data:
